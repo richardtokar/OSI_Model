@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Switch or Router? OSI Sorter</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --text: #11203a;
+      --switch: #1d4ed8;
+      --router: #7c3aed;
+      --ok: #15803d;
+      --bad: #b91c1c;
+      --border: #cfd8e6;
+      --shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .game {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 16px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    h1 {
+      margin: 0;
+      text-align: center;
+      font-size: clamp(1.6rem, 4vw, 2.3rem);
+      line-height: 1.2;
+    }
+
+    .subtitle {
+      text-align: center;
+      margin: 0;
+      font-size: clamp(1rem, 2.5vw, 1.15rem);
+    }
+
+    .top-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .score {
+      font-weight: 700;
+      font-size: 1.15rem;
+      text-align: center;
+    }
+
+    .memory {
+      font-weight: 700;
+      line-height: 1.5;
+      text-align: center;
+      font-size: 1rem;
+    }
+
+    .card-stage {
+      position: relative;
+      height: 210px;
+      border: 2px dashed #b6c4da;
+      border-radius: 14px;
+      background: #eef4ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .prompt-card {
+      width: min(92%, 460px);
+      min-height: 120px;
+      background: #ffffff;
+      border: 3px solid #1e293b;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-weight: 700;
+      font-size: clamp(1.2rem, 3.4vw, 1.6rem);
+      padding: 12px;
+      box-shadow: 0 8px 16px rgba(17, 32, 58, 0.18);
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      cursor: grab;
+      user-select: none;
+      touch-action: none;
+    }
+
+    .prompt-card.dragging {
+      cursor: grabbing;
+      box-shadow: 0 12px 20px rgba(17, 32, 58, 0.28);
+    }
+
+    .lanes {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .lane {
+      min-height: 120px;
+      border: 3px solid var(--border);
+      border-radius: 14px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-weight: 700;
+      line-height: 1.4;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+    }
+
+    .lane.switch {
+      border-color: var(--switch);
+    }
+
+    .lane.router {
+      border-color: var(--router);
+    }
+
+    .lane.active {
+      background: #dbeafe;
+    }
+
+    .lane.correct {
+      border-color: var(--ok);
+      background: #dcfce7;
+    }
+
+    .lane.wrong {
+      border-color: var(--bad);
+      background: #fee2e2;
+    }
+
+    .feedback {
+      min-height: 52px;
+      font-weight: 700;
+      text-align: center;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .feedback.ok {
+      color: var(--ok);
+    }
+
+    .feedback.bad {
+      color: var(--bad);
+    }
+
+    .final {
+      display: none;
+      text-align: center;
+      gap: 10px;
+    }
+
+    .final.show {
+      display: grid;
+    }
+
+    button {
+      justify-self: center;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 18px;
+      background: #0f766e;
+      color: white;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    @media (min-width: 740px) {
+      .top-row {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .lanes {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .card-stage {
+        height: 240px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="game">
+    <h1>Switch or Router? OSI Sorter</h1>
+    <p class="subtitle">Drag each card into the correct lane. Focus: Layer 2 vs Layer 3.</p>
+
+    <section class="top-row">
+      <div class="panel score" id="score">Score: 0 / 0</div>
+      <div class="panel memory">
+        Remember: <strong>Switch = Layer 2 = Frame</strong><br />
+        Remember: <strong>Router = Layer 3 = Packet</strong>
+      </div>
+    </section>
+
+    <section class="card-stage" id="cardStage" aria-live="polite">
+      <div class="prompt-card" id="card" role="button" aria-label="Draggable prompt card"></div>
+    </section>
+
+    <section class="lanes">
+      <div class="lane switch" id="switchLane" data-lane="switch">
+        Switch / Layer 2 / Frames
+      </div>
+      <div class="lane router" id="routerLane" data-lane="router">
+        Router / Layer 3 / Packets
+      </div>
+    </section>
+
+    <section class="panel feedback" id="feedback" aria-live="polite">
+      Drag the card to begin.
+    </section>
+
+    <section class="panel final" id="finalPanel">
+      <div id="finalScore"></div>
+      <div><strong>Remember: switches = Layer 2 = frames; routers = Layer 3 = packets.</strong></div>
+      <button id="resetBtn" type="button">Reset Game</button>
+    </section>
+  </main>
+
+  <script>
+    // Teacher-friendly prompt list:
+    // target: "switch" means Layer 2 / Frame lane
+    // target: "router" means Layer 3 / Packet lane
+    const baseCards = [
+      { text: "Frame", target: "switch" },
+      { text: "Packet", target: "router" },
+      { text: "MAC address", target: "switch" },
+      { text: "IP address", target: "router" },
+      { text: "Switch", target: "switch" },
+      { text: "Router", target: "router" },
+      { text: "Layer 2", target: "switch" },
+      { text: "Layer 3", target: "router" },
+      { text: "Uses hardware address", target: "switch" },
+      { text: "Uses logical address", target: "router" },
+      { text: "Moves traffic within a LAN", target: "switch" },
+      { text: "Connects one network to another", target: "router" },
+      { text: "Forwards data using MAC addresses", target: "switch" },
+      { text: "Forwards data using IP addresses", target: "router" }
+    ];
+
+    const scoreEl = document.getElementById("score");
+    const cardEl = document.getElementById("card");
+    const stageEl = document.getElementById("cardStage");
+    const switchLane = document.getElementById("switchLane");
+    const routerLane = document.getElementById("routerLane");
+    const feedbackEl = document.getElementById("feedback");
+    const finalPanel = document.getElementById("finalPanel");
+    const finalScoreEl = document.getElementById("finalScore");
+    const resetBtn = document.getElementById("resetBtn");
+
+    const lanes = { switch: switchLane, router: routerLane };
+
+    let cards = [];
+    let currentIndex = 0;
+    let correct = 0;
+    let completed = 0;
+    let acceptingInput = true;
+
+    let dragging = false;
+    let pointerId = null;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    function shuffle(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function updateScore() {
+      scoreEl.textContent = `Score: ${correct} / ${completed}`;
+    }
+
+    function resetCardPosition() {
+      cardEl.style.left = "50%";
+      cardEl.style.top = "50%";
+      cardEl.style.transform = "translate(-50%, -50%)";
+    }
+
+    function clearLaneStates() {
+      [switchLane, routerLane].forEach((lane) => {
+        lane.classList.remove("active", "correct", "wrong");
+      });
+    }
+
+    function currentCard() {
+      return cards[currentIndex];
+    }
+
+    function renderCard() {
+      const card = currentCard();
+      if (!card) {
+        endGame();
+        return;
+      }
+      cardEl.textContent = card.text;
+      cardEl.style.display = "flex";
+      feedbackEl.className = "panel feedback";
+      feedbackEl.textContent = "Drag the card into Switch/Layer 2/Frames or Router/Layer 3/Packets.";
+      clearLaneStates();
+      resetCardPosition();
+      acceptingInput = true;
+    }
+
+    function feedbackMessage(isCorrect, chosen, target) {
+      if (isCorrect && target === "switch") {
+        return "Correct! A switch works at Layer 2 and handles frames.";
+      }
+      if (isCorrect && target === "router") {
+        return "Correct! Routers work at Layer 3 and forward packets.";
+      }
+      if (!isCorrect && target === "switch") {
+        return "Not quite. MAC addresses and frames belong with switches at Layer 2.";
+      }
+      return "Not quite. IP addresses and packets belong with routers at Layer 3.";
+    }
+
+    function gradeDrop(chosenLaneKey) {
+      if (!acceptingInput) return;
+
+      acceptingInput = false;
+      clearLaneStates();
+
+      const card = currentCard();
+      const isCorrect = chosenLaneKey === card.target;
+
+      lanes[chosenLaneKey].classList.add(isCorrect ? "correct" : "wrong");
+      if (!isCorrect) {
+        lanes[card.target].classList.add("correct");
+      }
+
+      feedbackEl.className = `panel feedback ${isCorrect ? "ok" : "bad"}`;
+      feedbackEl.textContent = feedbackMessage(isCorrect, chosenLaneKey, card.target);
+
+      completed += 1;
+      if (isCorrect) correct += 1;
+      updateScore();
+
+      setTimeout(() => {
+        currentIndex += 1;
+        renderCard();
+      }, 1000);
+    }
+
+    function endGame() {
+      acceptingInput = false;
+      cardEl.style.display = "none";
+      clearLaneStates();
+      feedbackEl.className = "panel feedback ok";
+      feedbackEl.textContent = "Round complete! Great practice on Layer 2 vs Layer 3.";
+      finalPanel.classList.add("show");
+      finalScoreEl.textContent = `Final Score: ${correct} / ${cards.length}`;
+    }
+
+    function getLaneUnderPointer(clientX, clientY) {
+      for (const key of ["switch", "router"]) {
+        const rect = lanes[key].getBoundingClientRect();
+        if (clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom) {
+          return key;
+        }
+      }
+      return null;
+    }
+
+    function onPointerDown(e) {
+      if (!acceptingInput) return;
+      dragging = true;
+      pointerId = e.pointerId;
+      cardEl.classList.add("dragging");
+      cardEl.setPointerCapture(pointerId);
+
+      const cardRect = cardEl.getBoundingClientRect();
+      offsetX = e.clientX - cardRect.left;
+      offsetY = e.clientY - cardRect.top;
+      e.preventDefault();
+    }
+
+    function onPointerMove(e) {
+      if (!dragging || e.pointerId !== pointerId) return;
+
+      const stageRect = stageEl.getBoundingClientRect();
+      let x = e.clientX - stageRect.left - offsetX;
+      let y = e.clientY - stageRect.top - offsetY;
+
+      const maxX = stageRect.width - cardEl.offsetWidth;
+      const maxY = stageRect.height - cardEl.offsetHeight;
+
+      x = Math.max(0, Math.min(maxX, x));
+      y = Math.max(0, Math.min(maxY, y));
+
+      cardEl.style.left = `${x}px`;
+      cardEl.style.top = `${y}px`;
+      cardEl.style.transform = "none";
+
+      clearLaneStates();
+      const laneKey = getLaneUnderPointer(e.clientX, e.clientY);
+      if (laneKey) lanes[laneKey].classList.add("active");
+    }
+
+    function onPointerUp(e) {
+      if (!dragging || e.pointerId !== pointerId) return;
+
+      dragging = false;
+      cardEl.classList.remove("dragging");
+      cardEl.releasePointerCapture(pointerId);
+
+      const laneKey = getLaneUnderPointer(e.clientX, e.clientY);
+      if (laneKey) {
+        gradeDrop(laneKey);
+      } else {
+        clearLaneStates();
+        resetCardPosition();
+      }
+
+      pointerId = null;
+    }
+
+    function startGame() {
+      cards = shuffle(baseCards);
+      currentIndex = 0;
+      correct = 0;
+      completed = 0;
+      updateScore();
+      finalPanel.classList.remove("show");
+      cardEl.style.display = "flex";
+      renderCard();
+    }
+
+    cardEl.addEventListener("pointerdown", onPointerDown);
+    cardEl.addEventListener("pointermove", onPointerMove);
+    cardEl.addEventListener("pointerup", onPointerUp);
+    cardEl.addEventListener("pointercancel", onPointerUp);
+    resetBtn.addEventListener("click", startGame);
+
+    startGame();
+  </script>
+</body>
+</html>
