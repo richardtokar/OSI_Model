@@ -238,10 +238,10 @@
 
     <section class="lanes">
       <div class="lane switch" id="switchLane" data-lane="switch">
-        Switch / Layer 2 / Frames
+        Switch
       </div>
       <div class="lane router" id="routerLane" data-lane="router">
-        Router / Layer 3 / Packets
+        Router
       </div>
     </section>
 
@@ -308,9 +308,12 @@
     }
 
     function resetCardPosition() {
+      cardEl.style.position = "absolute";
+      cardEl.style.width = "min(92%, 460px)";
       cardEl.style.left = "50%";
       cardEl.style.top = "50%";
       cardEl.style.transform = "translate(-50%, -50%)";
+      cardEl.style.zIndex = "1";
     }
 
     function clearLaneStates() {
@@ -332,7 +335,7 @@
       cardEl.textContent = card.text;
       cardEl.style.display = "flex";
       feedbackEl.className = "panel feedback";
-      feedbackEl.textContent = "Drag the card into Switch/Layer 2/Frames or Router/Layer 3/Packets.";
+      feedbackEl.textContent = "Drag the card onto Router or Switch.";
       clearLaneStates();
       resetCardPosition();
       acceptingInput = true;
@@ -408,21 +411,21 @@
       const cardRect = cardEl.getBoundingClientRect();
       offsetX = e.clientX - cardRect.left;
       offsetY = e.clientY - cardRect.top;
+
+      cardEl.style.position = "fixed";
+      cardEl.style.width = `${cardRect.width}px`;
+      cardEl.style.left = `${cardRect.left}px`;
+      cardEl.style.top = `${cardRect.top}px`;
+      cardEl.style.transform = "none";
+      cardEl.style.zIndex = "1000";
       e.preventDefault();
     }
 
     function onPointerMove(e) {
       if (!dragging || e.pointerId !== pointerId) return;
 
-      const stageRect = stageEl.getBoundingClientRect();
-      let x = e.clientX - stageRect.left - offsetX;
-      let y = e.clientY - stageRect.top - offsetY;
-
-      const maxX = stageRect.width - cardEl.offsetWidth;
-      const maxY = stageRect.height - cardEl.offsetHeight;
-
-      x = Math.max(0, Math.min(maxX, x));
-      y = Math.max(0, Math.min(maxY, y));
+      const x = e.clientX - offsetX;
+      const y = e.clientY - offsetY;
 
       cardEl.style.left = `${x}px`;
       cardEl.style.top = `${y}px`;
@@ -463,9 +466,9 @@
     }
 
     cardEl.addEventListener("pointerdown", onPointerDown);
-    cardEl.addEventListener("pointermove", onPointerMove);
-    cardEl.addEventListener("pointerup", onPointerUp);
-    cardEl.addEventListener("pointercancel", onPointerUp);
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerUp);
     resetBtn.addEventListener("click", startGame);
 
     startGame();
