@@ -257,24 +257,18 @@
   </main>
 
   <script>
-    // Teacher-friendly prompt list:
+    // Simple prompt list:
     // target: "switch" means Layer 2 / Frame lane
     // target: "router" means Layer 3 / Packet lane
     const baseCards = [
-      { text: "Frame", target: "switch" },
-      { text: "Packet", target: "router" },
-      { text: "MAC address", target: "switch" },
-      { text: "IP address", target: "router" },
-      { text: "Switch", target: "switch" },
-      { text: "Router", target: "router" },
-      { text: "Layer 2", target: "switch" },
-      { text: "Layer 3", target: "router" },
-      { text: "Uses hardware address", target: "switch" },
-      { text: "Uses logical address", target: "router" },
-      { text: "Moves traffic within a LAN", target: "switch" },
-      { text: "Connects one network to another", target: "router" },
-      { text: "Forwards data using MAC addresses", target: "switch" },
-      { text: "Forwards data using IP addresses", target: "router" }
+      { text: "Layer 2 device", target: "switch" },
+      { text: "Layer 3 device", target: "router" },
+      { text: "Handles frames", target: "switch" },
+      { text: "Handles packets", target: "router" },
+      { text: "Decides the best path between networks", target: "router" },
+      { text: "Sends data to the intended node only", target: "switch" },
+      { text: "Replaces a hub", target: "switch" },
+      { text: "Network layer device", target: "router" }
     ];
 
     const scoreEl = document.getElementById("score");
